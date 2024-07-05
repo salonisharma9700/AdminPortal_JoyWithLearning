@@ -1,8 +1,8 @@
-* navbar */
-.navbar {
-  background-color: #333;
-  color: #fff;
-  padding: 10px 20px;
+/* navbar */
+.navbarr {
+  background-color: #bcfd49;
+  color: #000; /* Changed text color to black */
+  padding: 0.15rem;
   font-weight: bold;
   font-family: Arial, sans-serif;
 }
@@ -16,28 +16,28 @@
   background-color: #bcfd49;
 }
 
-.nav-link {
+.nav a {
   text-decoration: none;
-  color: inherit;
+  color: #131313; /* Blue color for links */
   margin: 0 10px;
   padding: 10px 15px;
   border-radius: 5px;
   transition: background-color 0.3s ease;
 }
 
-.nav-link:hover {
+/* .nav a:hover {
   background-color: #555;
-}
+} */
 
 @media (max-width: 768px) {
   .nav {
-      align-items: flex-start;
-      flex-direction: row; 
+    align-items: flex-start;
+    flex-direction: row;
   }
   
-  .nav-link {
-      margin: 5px 0;
-      padding: 10px;
+  .nav a {
+    margin: 5px 0;
+    padding: 10px;
   }
 }
 

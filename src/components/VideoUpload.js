@@ -23,12 +23,16 @@ const VidList = () => {
                 feedback: feedbackResponse.data.feedback || 'No feedback'
               };
             } catch (error) {
-              console.error(`Error fetching feedback for form: ${form._id}`, error);
-              return {
-                ...form,
-                status: 'No status',
-                feedback: 'No feedback'
-              };
+              if (error.response && error.response.status === 404) {
+                console.error(`Feedback not found for form: ${form._id}`);
+                return {
+                  ...form,
+                  status: 'No status',
+                  feedback: 'No feedback'
+                };
+              } else {
+                throw error; // Propagate other errors
+              }
             }
           })
         );
@@ -95,10 +99,11 @@ const VidList = () => {
   return (
     <div className="admin-portal">
       <h1>Form Data</h1>
-      <div>
-        <label htmlFor="statusFilter">Filter by status: </label>
+      <div className="mb-3">
+        <label htmlFor="statusFilter" className="form-label">Filter by status:</label>
         <select
           id="statusFilter"
+          className="form-select"
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
         >
@@ -108,71 +113,75 @@ const VidList = () => {
           <option value="done">Done</option>
         </select>
       </div>
-      {error && <p>Error: {error}</p>}
-      <table>
-        <thead>
-          <tr>
-            <th>Child Name</th>
-            <th>Age</th>
-            <th>Gender</th>
-            <th>Father's Name</th>
-            <th>Father's Contact</th>
-            <th>Father's Email</th>
-            <th>Mother's Name</th>
-            <th>Mother's Contact</th>
-            <th>Mother's Email</th>
-            <th>Message</th>
-            <th>Video</th>
-            <th>Created At</th>
-            <th>Status</th>
-            <th>Feedback/Comments</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredFormDetails.map((data) => (
-            <tr key={data._id}>
-              <td>{data.childName}</td>
-              <td>{data.age}</td>
-              <td>{data.gender}</td>
-              <td>{data.fathersName}</td>
-              <td>{data.fathersContact}</td>
-              <td>{data.fathersEmail}</td>
-              <td>{data.mothersName}</td>
-              <td>{data.mothersContact}</td>
-              <td>{data.mothersEmail}</td>
-              <td>{data.message}</td>
-              <td>
-                <a href={`http://localhost:5000/${data.videoPath}`} target="_blank" rel="noopener noreferrer">
-                  Play Video
-                </a>
-              </td>
-              <td>{new Date(data.createdAt).toLocaleString()}</td>
-              <td>
-                <select
-                  value={editing[data._id]?.status || data.status}
-                  onChange={(e) => handleStatusChange(data._id, e.target.value)}
-                >
-                  <option value="inprogress">In Progress</option>
-                  <option value="checked">Checked</option>
-                  <option value="done">Done</option>
-                </select>
-              </td>
-              <td>
-                <input
-                  type="text"
-                  value={editing[data._id]?.feedback || data.feedback}
-                  onChange={(e) => handleFeedbackChange(data._id, e.target.value)}
-                  placeholder="Enter feedback/comments"
-                />
-              </td>
-              <td>
-                <button onClick={() => handleSave(data._id)}>Save</button>
-              </td>
+      {error && <p className="text-danger">Error: {error}</p>}
+      <div className="table-responsive">
+        <table className="table table-bordered table-striped">
+          <thead>
+            <tr>
+              <th>Child Name</th>
+              <th>Age</th>
+              <th>Gender</th>
+              <th>Father's Name</th>
+              <th>Father's Contact</th>
+              <th>Father's Email</th>
+              <th>Mother's Name</th>
+              <th>Mother's Contact</th>
+              <th>Mother's Email</th>
+              <th>Message</th>
+              <th>Video</th>
+              <th>Created At</th>
+              <th>Status</th>
+              <th>Feedback/Comments</th>
+              <th>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filteredFormDetails.map((data) => (
+              <tr key={data._id}>
+                <td>{data.childName}</td>
+                <td>{data.age}</td>
+                <td>{data.gender}</td>
+                <td>{data.fathersName}</td>
+                <td>{data.fathersContact}</td>
+                <td>{data.fathersEmail}</td>
+                <td>{data.mothersName}</td>
+                <td>{data.mothersContact}</td>
+                <td>{data.mothersEmail}</td>
+                <td>{data.message}</td>
+                <td>
+                  <a href={`http://localhost:5000/${data.videoPath}`} target="_blank" rel="noopener noreferrer">
+                    Play Video
+                  </a>
+                </td>
+                <td>{new Date(data.createdAt).toLocaleString()}</td>
+                <td>
+                  <select
+                    value={editing[data._id]?.status || data.status}
+                    onChange={(e) => handleStatusChange(data._id, e.target.value)}
+                    className="form-select"
+                  >
+                    <option value="inprogress">In Progress</option>
+                    <option value="checked">Checked</option>
+                    <option value="done">Done</option>
+                  </select>
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    value={editing[data._id]?.feedback || data.feedback}
+                    onChange={(e) => handleFeedbackChange(data._id, e.target.value)}
+                    className="form-control"
+                    placeholder="Enter feedback/comments"
+                  />
+                </td>
+                <td>
+                  <button onClick={() => handleSave(data._id)} className="btn btn-primary">Save</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
