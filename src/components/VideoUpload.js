@@ -1,45 +1,101 @@
+// // VidList.js (or any appropriate component name)
+
+// import React, { useEffect, useState } from 'react';
+// import axios from 'axios';
+
+// const VidList = () => {
+//   const [formDetails, setFormDetails] = useState([]);
+//   const [error, setError] = useState(null);
+//   const [isLoading, setIsLoading] = useState(true); // Loading indicator state
+
+//   useEffect(() => {
+//     const fetchFormDetails = async () => {
+//       try {
+//         const response = await axios.get('http://localhost:5000/api/adminmedia');
+//         setFormDetails(response.data);
+//         setIsLoading(false); // Data fetching complete
+//       } catch (error) {
+//         // setError(error.toString());  
+//         console.error('Error fetching form details:', error);
+//       }
+//     };
+
+//     fetchFormDetails();
+//   }, []);
+
+//   return (
+//     <div className="admin-portal">
+//       <h1>Form Data</h1>
+//       {isLoading && <p>Loading...</p>} {/* Loading indicator */}
+//       {error && <p className="text-danger">Error: {error}</p>}
+//       <div className="table-responsive">
+//         <table className="table table-bordered table-striped">
+//           <thead>
+//             <tr>
+//               <th>Child Name</th>
+//               <th>Age</th>
+//               <th>Gender</th>
+//               <th>Father's Name</th>
+//               <th>Father's Contact</th>
+//               <th>Father's Email</th>
+//               <th>Mother's Name</th>
+//               <th>Mother's Contact</th>
+//               <th>Mother's Email</th>
+//               <th>Message</th>
+//               <th>Video</th>
+//               <th>Created At</th>
+//             </tr>
+//           </thead>
+//           <tbody>
+//             {formDetails.map((data) => (
+//               <tr key={data._id}>
+//                 <td>{data.childName}</td>
+//                 <td>{data.age}</td>
+//                 <td>{data.gender}</td>
+//                 <td>{data.fathersName}</td>
+//                 <td>{data.fathersContact}</td>
+//                 <td>{data.fathersEmail}</td>
+//                 <td>{data.mothersName}</td>
+//                 <td>{data.mothersContact}</td>
+//                 <td>{data.mothersEmail}</td>
+//                 <td>{data.message}</td>
+//                 <td>
+//                   <a href={`http://localhost:5000/${data.videoPath}`} target="_blank" rel="noopener noreferrer">
+//                     Play Video
+//                   </a>
+//                 </td>
+//                 <td>{new Date(data.createdAt).toLocaleString()}</td>
+//               </tr>
+//             ))}
+//           </tbody>
+//         </table>
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default VidList;
+
+
+
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-
+const apiUrl = process.env.REACT_APP_API_URL;
 const VidList = () => {
   const [formDetails, setFormDetails] = useState([]);
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [editing, setEditing] = useState({});
+  const [filteredFormDetails, setFilteredFormDetails] = useState([]);
   const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(true); // Loading indicator state
+  const [statusFilter, setStatusFilter] = useState('all'); // Status filter state
 
   useEffect(() => {
     const fetchFormDetails = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/forms');
-        const forms = response.data;
-
-        const formDetailsWithFeedback = await Promise.all(
-          forms.map(async (form) => {
-            try {
-              const feedbackResponse = await axios.get(`http://localhost:5000/api/getAdminVidFeedback/${form._id}`);
-              return {
-                ...form,
-                status: feedbackResponse.data.status || 'No status',
-                feedback: feedbackResponse.data.feedback || 'No feedback'
-              };
-            } catch (error) {
-              if (error.response && error.response.status === 404) {
-                console.error(`Feedback not found for form: ${form._id}`);
-                return {
-                  ...form,
-                  status: 'No status',
-                  feedback: 'No feedback'
-                };
-              } else {
-                throw error; // Propagate other errors
-              }
-            }
-          })
-        );
-
-        setFormDetails(formDetailsWithFeedback);
+        const response = await axios.get(`${apiUrl}/api/adminmedia`);
+        setFormDetails(response.data);
+        setIsLoading(false); // Data fetching complete
       } catch (error) {
-        setError(error.toString());
+        setError('Error fetching form details');  
         console.error('Error fetching form details:', error);
       }
     };
@@ -47,55 +103,53 @@ const VidList = () => {
     fetchFormDetails();
   }, []);
 
-  const handleStatusChange = (id, value) => {
-    setEditing((prev) => ({
-      ...prev,
-      [id]: {
-        ...prev[id],
-        status: value
-      }
-    }));
-  };
+  // Update filteredFormDetails when formDetails or statusFilter changes
+  useEffect(() => {
+    filterFormDetails();
+  }, [formDetails, statusFilter]);
 
-  const handleFeedbackChange = (id, value) => {
-    setEditing((prev) => ({
-      ...prev,
-      [id]: {
-        ...prev[id],
-        feedback: value
-      }
-    }));
+  const filterFormDetails = () => {
+    if (statusFilter === 'all') {
+      setFilteredFormDetails(formDetails);
+    } else {
+      const filtered = formDetails.filter((form) => form.status === statusFilter);
+      setFilteredFormDetails(filtered);
+    }
   };
-
-  const handleSave = async (id) => {
+  const handleStatusChange = async (id, status) => {
     try {
-      const updatedDetails = editing[id];
-      const response = await axios.patch(`http://localhost:5000/api/updateFeedback/${id}`, updatedDetails);
-
-      if (response.data && response.data.updatedForm) {
-        const updatedForm = response.data.updatedForm;
-        setFormDetails((prev) =>
-          prev.map((form) =>
-            form._id === id ? { ...form, ...updatedDetails } : form
-          )
-        );
-        setEditing((prev) => {
-          const { [id]: removed, ...rest } = prev;
-          return rest;
-        });
-      } else {
-        setError('Invalid response from server');
-      }
+      // Send a POST request to the backend API to save or update status
+      await axios.post(`${apiUrl}/api/saveAdminVidFeedback`, { formId: id, status });
+  
+      // Update the frontend state (formDetails) with the updated status
+      const updatedForms = formDetails.map((form) =>
+        form._id === id ? { ...form, status } : form
+      );
+      setFormDetails(updatedForms);
+  
+      // Update the filtered form details if necessary
+      filterFormDetails();
     } catch (error) {
-      setError(error.toString());
+      setError('Error updating status');
+      console.error('Error updating status:', error);
+    }
+  };
+  
+  
+  const handleFeedbackChange = async (id, feedback) => {
+    try {
+      await axios.post(`${apiUrl}/api/saveAdminVidFeedback`, { formId: id, feedback });
+      const updatedForms = formDetails.map((form) =>
+        form._id === id ? { ...form, feedback } : form
+      );
+      setFormDetails(updatedForms);
+      filterFormDetails(); // Update filtered list if necessary
+    } catch (error) {
+      setError('Error updating feedback');
       console.error('Error updating feedback:', error);
     }
   };
-
-  const filteredFormDetails = formDetails.filter((form) =>
-    statusFilter === 'all' ? true : form.status === statusFilter
-  );
-
+  
   return (
     <div className="admin-portal">
       <h1>Form Data</h1>
@@ -113,6 +167,7 @@ const VidList = () => {
           <option value="done">Done</option>
         </select>
       </div>
+      {isLoading && <p>Loading...</p>} {/* Loading indicator */}
       {error && <p className="text-danger">Error: {error}</p>}
       <div className="table-responsive">
         <table className="table table-bordered table-striped">
@@ -131,8 +186,7 @@ const VidList = () => {
               <th>Video</th>
               <th>Created At</th>
               <th>Status</th>
-              <th>Feedback/Comments</th>
-              <th>Actions</th>
+              <th>Feedback</th>
             </tr>
           </thead>
           <tbody>
@@ -149,14 +203,14 @@ const VidList = () => {
                 <td>{data.mothersEmail}</td>
                 <td>{data.message}</td>
                 <td>
-                  <a href={`http://localhost:5000/${data.videoPath}`} target="_blank" rel="noopener noreferrer">
+                  <a href={`${apiUrl}/${data.videoPath}`} target="_blank" rel="noopener noreferrer">
                     Play Video
                   </a>
                 </td>
                 <td>{new Date(data.createdAt).toLocaleString()}</td>
                 <td>
                   <select
-                    value={editing[data._id]?.status || data.status}
+                    value={data.status}
                     onChange={(e) => handleStatusChange(data._id, e.target.value)}
                     className="form-select"
                   >
@@ -168,14 +222,11 @@ const VidList = () => {
                 <td>
                   <input
                     type="text"
-                    value={editing[data._id]?.feedback || data.feedback}
+                    value={data.feedback || ''}
                     onChange={(e) => handleFeedbackChange(data._id, e.target.value)}
                     className="form-control"
                     placeholder="Enter feedback/comments"
                   />
-                </td>
-                <td>
-                  <button onClick={() => handleSave(data._id)} className="btn btn-primary">Save</button>
                 </td>
               </tr>
             ))}

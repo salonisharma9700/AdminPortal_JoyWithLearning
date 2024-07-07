@@ -45,28 +45,38 @@
 /* formdata */
 
 /* src/components/FormDataList.css */
-
+/* Update table styles */
 table {
   width: 100%;
   border-collapse: collapse;
+  border-radius: 8px; /* Rounded corners for the table */
 }
+
+/* Styling for table header and data cells */
 th, td {
   padding: 8px;
-  border: 1px solid #ddd;
+  border: 1px solid #12a807;
 }
+
+/* Background color for table header */
 th {
-  background-color: #f4f4f4;
+  background-color: #92f48b;
 }
-td div {
-  margin-bottom: 8px;
+
+/* Light green background color for table rows */
+tr {
+  background-color: #f0fff0; /* Light green color */
 }
+
+/* Styling for input and select elements */
 input, select {
   width: 100%;
   box-sizing: border-box;
 }
+
+/* Styling for buttons */
 button {
   padding: 6px 12px;
   margin-top: 5px;
   cursor: pointer;
 }
-
