@@ -45,36 +45,36 @@ const FormDataList = () => {
     const handleSave = async (id) => {
         try {
             const { status, feedback } = editing[id];
-
-            const response = await fetch(`${apiUrl}/api/updateFormData/${id}`, {
+    
+            const response = await fetch(`${apiUrl}/api/adminvidfeedback/${id}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ status, feedback }),
             });
-
+    
             if (!response.ok) {
-                throw new Error('Failed to update form data');
+                throw new Error('Failed to update status and feedback');
             }
-
-            const { updatedForm } = await response.json();
-            console.log('Updated form data:', updatedForm); // Debugging line to verify updated data
-
+    
+            const data = await response.json();
+            console.log('Server response:', data);
+    
             setFormData(prevFormData =>
                 prevFormData.map(data => (data._id === id ? { ...data, status, feedback } : data))
             );
-
+    
             setEditing(prevEditing => {
                 const newEditing = { ...prevEditing };
                 delete newEditing[id];
                 return newEditing;
             });
         } catch (error) {
-            console.error('Error updating form data:', error);
+            console.error('Error updating status and feedback:', error);
         }
     };
-
+    
     const filteredData = filter === 'all' ? formData : formData.filter(data => data.status === filter);
 
     return (
